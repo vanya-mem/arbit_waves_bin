@@ -35,7 +35,7 @@ def get_orders_by_type(user_type, order_book):
         raise Exception('Type должен быть либо Sell, либо Buy')
 
 
-def calc_waves_for_usdt_bin_wex(usdtAmount, Type):
+def calc_waves_for_usdt_wex(usdtAmount, Type):
     order_book, asset_pair = get_orderbook_wex()
     if usdtAmount == str(usdtAmount):
         usdtAmount = int(usdtAmount)
@@ -56,7 +56,7 @@ def calc_waves_for_usdt_bin_wex(usdtAmount, Type):
     return waves_sum
 
 
-def calc_waves_for_usdt_bin_bin(usdtAmount, Type):
+def calc_waves_for_usdt_bin(usdtAmount, Type):
     if usdtAmount == str(usdtAmount):
         usdtAmount = int(usdtAmount)
     order_book = get_orderbook_bin()
@@ -117,7 +117,7 @@ def calc_usdt_for_waves_wex(wavesAmount, Type):
     return usdt_sum
 
 
-def get_amount(user_type, usdtAmount):
+def get_amounts(user_type, usdtAmount):
     buy_waves_bin = 0
     sell_waves_wex = 0
     buy_waves_wex = 0
@@ -125,17 +125,17 @@ def get_amount(user_type, usdtAmount):
     get_type = user_type.lower()
     if usdtAmount == int(usdtAmount):
         if get_type == 'buy':
-            buy_waves_bin += calc_waves_for_usdt_bin_bin(usdtAmount, get_type)
+            buy_waves_bin += calc_waves_for_usdt_bin(usdtAmount, get_type)
             sell_waves_wex += calc_usdt_for_waves_wex(buy_waves_bin, 'sell')
-            buy_waves_wex += calc_waves_for_usdt_bin_wex(usdtAmount, get_type)
+            buy_waves_wex += calc_waves_for_usdt_wex(usdtAmount, get_type)
             sell_waves_bin += calc_usdt_for_waves_bin(buy_waves_wex, 'sell')
         elif get_type == 'sell':
-            buy_waves_bin = calc_waves_for_usdt_bin_bin(usdtAmount, get_type)
+            buy_waves_bin = calc_waves_for_usdt_bin(usdtAmount, get_type)
             sell_waves_wex = calc_usdt_for_waves_wex(buy_waves_bin, 'buy')
-            buy_waves_wex = calc_waves_for_usdt_bin_wex(usdtAmount, get_type)
+            buy_waves_wex = calc_waves_for_usdt_wex(usdtAmount, get_type)
             sell_waves_bin = calc_usdt_for_waves_bin(buy_waves_wex, 'buy')
 
-    return sell_waves_wex, sell_waves_bin, usdtAmount, user_type
+    return sell_waves_wex, sell_waves_bin, usdtAmount
 
 
 def write_logs(arbit_percent, line):
@@ -146,17 +146,12 @@ def write_logs(arbit_percent, line):
 
 def main(user_type, usdtAmount):
     while True:
-        usdt_amount_wex, usdt_amount_bin, all_usdt_amount, get_user_type = get_amount(user_type, usdtAmount)
-        get_type = user_type.lower()
-        if get_type == 'buy':
-            print(f'BIN --> WEX: {all_usdt_amount}$ --> {usdt_amount_wex}')
-            print(f'WEX --> BIN: {all_usdt_amount}$ --> {usdt_amount_bin}')
-        elif get_type == 'sell':
-            print(f'BIN --> WEX: {all_usdt_amount}$ --> {usdt_amount_wex}')
-            print(f'WEX --> BIN: {all_usdt_amount}$ --> {usdt_amount_bin}')
-        min_usdt_amount = min(usdt_amount_bin, usdt_amount_wex)
+        usdt_amount_wex, usdt_amount_bin, all_usdt_amount = get_amounts(user_type, usdtAmount)
+        print(f'BIN --> WEX: {all_usdt_amount}$ --> {usdt_amount_wex:.2f}$')
+        print(f'WEX --> BIN: {all_usdt_amount}$ --> {usdt_amount_bin:.2f}$')
+        print('---------------------------------')
         max_usdt_amount = max(usdt_amount_wex, usdt_amount_bin)
-        arbit_percent = 100 - ((min_usdt_amount / max_usdt_amount) * 100)
+        arbit_percent = 100 - ((all_usdt_amount / max_usdt_amount) * 100)
         writing_log_line = f'{hour}:{minutes}:{seconds} - {day}.{month}.{year} - арбитраж равен {arbit_percent:.1f}' + '\n'
         write_logs(arbit_percent, line=writing_log_line)
         time.sleep(10)
