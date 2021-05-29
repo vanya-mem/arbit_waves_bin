@@ -129,15 +129,15 @@ def main(usdt_amount):
     pw.setNode(node='http://nodes.wavesnodes.com', chain='mainnet')
     pw.setMatcher(node='https://matcher.waves.exchange')
     while True:
-        sell_waves_wex, sell_waves_bin = get_amounts(usdt_amount)
-        print(f'BIN --> WEX: {usdt_amount}$ --> {sell_waves_wex:.2f}$')
-        print(f'WEX --> BIN: {usdt_amount}$ --> {sell_waves_bin:.2f}$')
+        usdt_wex, usdt_bin = get_amounts(usdt_amount)
+        print(f'BIN --> WEX: {usdt_amount}$ --> {usdt_wex:.2f}$')
+        print(f'WEX --> BIN: {usdt_amount}$ --> {usdt_bin:.2f}$')
         print('---------------------------------')
-        max_usdt_amount = max(sell_waves_wex, sell_waves_bin)
+        max_usdt_amount = max(usdt_wex, usdt_bin)
         arbit_side = None
-        if max_usdt_amount == sell_waves_wex:
+        if max_usdt_amount == usdt_wex:
             arbit_side = 'BIN --> WEX'
-        elif max_usdt_amount == sell_waves_bin:
+        elif max_usdt_amount == usdt_bin:
             arbit_side = 'WEX --> BIN'
         arbit_percent = 100 - ((usdt_amount / max_usdt_amount) * 100)
         if arbit_percent > 3:
