@@ -20,120 +20,129 @@ def get_orderbook_bin():
     return order_book
 
 
-def calc_waves_sum(order_price, order_waves_amount, usdt_amount, waves_sum, usdt_sum):
-    order_usdt_amount = order_price * order_waves_amount
-    usdt_sum_diff = min(usdt_amount - usdt_sum, order_usdt_amount)
-    usdt_sum += usdt_sum_diff
-    waves_sum += (usdt_sum_diff / order_price)
-    return usdt_sum_diff
-
-
-def calc_waves_for_usdt(usdt_amount, orderbook):
+def calc_waves_for_usdt_bin(usdt_amount):
     if usdt_amount != int(usdt_amount):
         usdt_amount = int(usdt_amount)
-    order_book = orderbook['asks']
+    order_book = get_orderbook_bin()['asks']
     usdt_sum = 0
     waves_sum = 0
     for order in order_book:
-        try:
-            if int(order['amount']) > 10 ** 8:
-                order_waves_amount = order['amount'] / 10 ** ASSET_PAIR.asset1.decimals
-                order_price = order['price'] / 10 ** (8 + ASSET_PAIR.asset2.decimals - ASSET_PAIR.asset1.decimals)
-                usdt_sum_diff = calc_waves_sum(order_price, order_waves_amount, usdt_amount, waves_sum, usdt_sum)
-                usdt_sum += usdt_sum_diff
-                waves_sum += (usdt_sum_diff / order_price)
-                if usdt_sum >= usdt_amount:
-                    break
-        except TypeError:
-            order_price = float(order[0])
-            order_waves_amount = float(order[1])
-            usdt_sum_diff = calc_waves_sum(order_price, order_waves_amount, usdt_amount, waves_sum, usdt_sum)
-            usdt_sum += usdt_sum_diff
-            waves_sum += (usdt_sum_diff / order_price)
-            if usdt_sum >= usdt_amount:
-                break
+        order_price = float(order[0])
+        order_waves_amount = float(order[1])
+        order_usdt_amount = order_price * order_waves_amount
+        usdt_sum_diff = min((usdt_amount - usdt_sum, order_usdt_amount))
+        usdt_sum += usdt_sum_diff
+        waves_sum += (usdt_sum_diff / order_price)
+
+        if usdt_sum >= usdt_amount:
+            break
 
     return waves_sum
 
 
-def calc_usdt_for_waves_bin(wavesAmount):
-    if wavesAmount == str(wavesAmount):
-        wavesAmount = int(wavesAmount)
+def calc_waves_for_usdt_wex(usdt_amount):
+    if usdt_amount != int(usdt_amount):
+        usdt_amount = int(usdt_amount)
+    order_book = get_orderbook_wex()['asks']
+    usdt_sum = 0
+    waves_sum = 0
+    for order in order_book:
+        order_waves_amount = order['amount'] / 10 ** ASSET_PAIR.asset1.decimals
+        order_price = order['price'] / 10 ** (8 + ASSET_PAIR.asset2.decimals - ASSET_PAIR.asset1.decimals)
+        order_usdt_amount = order_price * order_waves_amount
+        usdt_sum_diff = min((usdt_amount - usdt_sum, order_usdt_amount))
+        usdt_sum += usdt_sum_diff
+        waves_sum += (usdt_sum_diff / order_price)
+
+        if usdt_sum >= usdt_amount:
+            break
+
+    return waves_sum
+
+
+def calc_usdt_for_waves_bin(waves_amount):
+    if waves_amount == str(waves_amount):
+        waves_amount = int(waves_amount)
     order_book = get_orderbook_bin()['bids']
     usdt_sum = 0
     waves_sum = 0
     for order in order_book:
         order_price = float(order[0])
         order_waves_amount = float(order[1])
-        waves_sum_diff = min(wavesAmount - waves_sum, order_waves_amount)
+        waves_sum_diff = min(waves_amount - waves_sum, order_waves_amount)
         waves_sum += waves_sum_diff
         usdt_sum += (waves_sum_diff * order_price)
 
-        if waves_sum >= wavesAmount:
+        if waves_sum >= waves_amount:
             break
 
     return usdt_sum
 
 
-def calc_usdt_for_waves_wex(wavesAmount):
+def calc_usdt_for_waves_wex(waves_amount):
     order_book = get_orderbook_wex()
-    if wavesAmount == str(wavesAmount):
-        wavesAmount = int(wavesAmount)
+    if waves_amount == str(waves_amount):
+        waves_amount = int(waves_amount)
     order_book = order_book['bids']
     usdt_sum = 0
     waves_sum = 0
     for order in order_book:
         order_waves_amount = order['amount'] / 10 ** ASSET_PAIR.asset1.decimals
         order_price = order['price'] / 10 ** (8 + ASSET_PAIR.asset2.decimals - ASSET_PAIR.asset1.decimals)
-        waves_sum_diff = min(wavesAmount - waves_sum, order_waves_amount)
+        waves_sum_diff = min(waves_amount - waves_sum, order_waves_amount)
         waves_sum += waves_sum_diff
         usdt_sum += (waves_sum_diff * order_price)
 
-        if waves_sum >= wavesAmount:
+        if waves_sum >= waves_amount:
             break
 
     return usdt_sum
 
 
-def get_amounts(usdtAmount):
+def get_amounts(usdt_amount):
     buy_waves_bin = 0
     sell_waves_wex = 0
     buy_waves_wex = 0
     sell_waves_bin = 0
-    if usdtAmount == int(usdtAmount):
-        buy_waves_bin += calc_waves_for_usdt(usdtAmount, orderbook=get_orderbook_bin())
+    if usdt_amount == int(usdt_amount):
+        buy_waves_bin += calc_waves_for_usdt_bin(usdt_amount)
         sell_waves_wex += calc_usdt_for_waves_wex(buy_waves_bin)
-        buy_waves_wex += calc_waves_for_usdt(usdtAmount, orderbook=get_orderbook_wex())
+        buy_waves_wex += calc_waves_for_usdt_wex(usdt_amount)
         sell_waves_bin += calc_usdt_for_waves_bin(buy_waves_wex)
 
-    return sell_waves_wex, sell_waves_bin, usdtAmount
+    return sell_waves_wex, sell_waves_bin
 
 
-def write_logs(line, arbit_percent):
-    if arbit_percent > 3:
-        get_time = datetime.now()
-        hour = get_time.hour
-        minute = get_time.minute
-        seconds = get_time.second
-        day = get_time.day
-        month = get_time.month
-        year = get_time.year
-        with open('arbit_log.txt', 'a', encoding='utf8') as file:
-            file.write(f'{hour}:{minute}:{seconds} - {day}.{month}.{year} - ' + line + '\n')
+def write_logs(line):
+    get_time = datetime.now()
+    hour = get_time.hour
+    minute = get_time.minute
+    seconds = get_time.second
+    day = get_time.day
+    month = get_time.month
+    year = get_time.year
+    with open('arbit_log.txt', 'a', encoding='utf8') as file:
+        file.write(f'{hour}:{minute}:{seconds} - {day}.{month}.{year} - ' + line + '\n')
 
 
-def main(usdtAmount):
+def main(usdt_amount):
     pw.setNode(node='http://nodes.wavesnodes.com', chain='mainnet')
     pw.setMatcher(node='https://matcher.waves.exchange')
     while True:
-        usdt_amount_wex, usdt_amount_bin, all_usdt_amount = get_amounts(usdtAmount)
-        print(f'BIN --> WEX: {all_usdt_amount}$ --> {usdt_amount_wex:.2f}$')
-        print(f'WEX --> BIN: {all_usdt_amount}$ --> {usdt_amount_bin:.2f}$')
+        sell_waves_wex, sell_waves_bin = get_amounts(usdt_amount)
+        print(f'BIN --> WEX: {usdt_amount}$ --> {sell_waves_wex:.2f}$')
+        print(f'WEX --> BIN: {usdt_amount}$ --> {sell_waves_bin:.2f}$')
         print('---------------------------------')
-        max_usdt_amount = max(usdt_amount_wex, usdt_amount_bin)
-        arbit_percent = 100 - ((all_usdt_amount / max_usdt_amount) * 100)
-        writing_log_line = f'Арбитраж = {arbit_percent}%'
-        write_logs(line=writing_log_line, arbit_percent=arbit_percent)
+        max_usdt_amount = max(sell_waves_wex, sell_waves_bin)
+        arbit_side = None
+        if max_usdt_amount == sell_waves_wex:
+            arbit_side = 'BIN --> WEX'
+        elif max_usdt_amount == sell_waves_bin:
+            arbit_side = 'WEX --> BIN'
+        arbit_percent = 100 - ((usdt_amount / max_usdt_amount) * 100)
+        if arbit_percent > 3:
+            writing_log_line = f'Арбитраж = {arbit_percent:.2f}%.' + f' При такой покупке и продаже: {arbit_side}'
+            write_logs(line=writing_log_line)
         time.sleep(10)
 
 
