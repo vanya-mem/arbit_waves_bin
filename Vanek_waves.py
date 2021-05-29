@@ -141,7 +141,7 @@ def main(usdt_amount):
             arbit_side = 'WEX --> BIN'
         arbit_percent = 100 - ((usdt_amount / max_usdt_amount) * 100)
         if arbit_percent > 3:
-            writing_log_line = f'Арбитраж = {arbit_percent:.2f}%.' + f' При такой покупке и продаже: {arbit_side}'
+            writing_log_line = f'Арбитраж = {arbit_side:.2f} {arbit_percent}%'
             write_logs(line=writing_log_line)
         time.sleep(10)
 
