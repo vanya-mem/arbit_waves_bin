@@ -41,6 +41,45 @@ def calc_waves_for_usdt_binance(usdt_amount):
     return waves_sum
 
 
+def calc_waves_for_usdn_wex(usdn_amount):
+    if usdn_amount != int(usdn_amount):
+        usdn_amount = int(usdn_amount)
+    order_book = get_orderbook_waves_exchange()['asks']
+    usdn_sum = 0
+    waves_sum = 0
+    for order in order_book:
+        order_waves_amount = order['amount'] / 10 ** ASSET_PAIR.asset1.decimals
+        order_price = order['price'] / 10 ** (8 + ASSET_PAIR.asset2.decimals - ASSET_PAIR.asset1.decimals)
+        order_usdt_amount = order_price * order_waves_amount
+        usdt_sum_diff = min((usdn_amount - usdn_sum, order_usdt_amount))
+        usdn_sum += usdt_sum_diff
+        waves_sum += (usdt_sum_diff / order_price)
+
+        if usdn_sum >= usdn_amount:
+            break
+
+    return waves_sum
+
+
+def calc_usdt_for_waves_bin(waves_amount):
+    if waves_amount == str(waves_amount):
+        waves_amount = int(waves_amount)
+    order_book = get_orderbook_binance()['bids']
+    usdt_sum = 0
+    waves_sum = 0
+    for order in order_book:
+        order_price = float(order[0])
+        order_waves_amount = float(order[1])
+        waves_sum_diff = min(waves_amount - waves_sum, order_waves_amount)
+        waves_sum += waves_sum_diff
+        usdt_sum += (waves_sum_diff * order_price)
+
+        if waves_sum >= waves_amount:
+            break
+
+    return usdt_sum
+
+
 def calc_usdn_for_waves_wex(waves_amount):
     order_book = get_orderbook_waves_exchange()
     if waves_amount == str(waves_amount):
@@ -72,14 +111,23 @@ def main(usdt_amount):
     pw.setNode(node='http://nodes.wavesnodes.com', chain='mainnet')
     pw.setMatcher(node='https://matcher.waves.exchange')
     while True:
-        waves_sum = calc_waves_for_usdt_binance(usdt_amount)
-        usdn_sum = calc_usdn_for_waves_wex(waves_sum)
-        price_deflection = usdn_sum / usdt_amount
-        if price_deflection > 1.1:
-            print('Найдено отклонение в цене')
-            write_log(str(price_deflection))
+        waves_sum_bin = calc_waves_for_usdt_binance(usdt_amount)
+        usdn_sum_wex = calc_usdn_for_waves_wex(waves_sum_bin)
+        waves_sum_wex = calc_waves_for_usdn_wex(usdt_amount)
+        usdt_sum_bin = calc_usdt_for_waves_bin(waves_sum_wex)
+        price_deflect_side = None
+        price_deflect_bin_to_wex = usdn_sum_wex / usdt_amount
+        price_deflect_wex_to_bin = usdt_sum_bin / usdt_amount
+        max_price_deflect = max(price_deflect_bin_to_wex, price_deflect_wex_to_bin)
+        if max_price_deflect > 1.01:
+            print('В цене найдено нужное отклонение')
+            if max_price_deflect == price_deflect_wex_to_bin:
+                price_deflect_side = 'WEX --> BIN'
+            elif max_price_deflect == price_deflect_bin_to_wex:
+                price_deflect_side = 'BIN --> WEX'
+            write_log(f'{max_price_deflect:.2f}% {price_deflect_side}')
         else:
-            print('Отклонения в цене пока не найдено')
+            print('Нужного отклонения в цене не найдено')
         time.sleep(10)
 
 
