@@ -126,9 +126,13 @@ def write_logs(line):
 
 
 def main(usdt_amount):
+    arbit_percent_mass = []
+    arbit_time_mass = []
+    second_counter = 0
     pw.setNode(node='http://nodes.wavesnodes.com', chain='mainnet')
     pw.setMatcher(node='https://matcher.waves.exchange')
     while True:
+        time_start = time.time()
         usdt_wex, usdt_bin = get_amounts(usdt_amount)
         print(f'BIN --> WEX: {usdt_amount}$ --> {usdt_wex:.2f}$')
         print(f'WEX --> BIN: {usdt_amount}$ --> {usdt_bin:.2f}$')
@@ -141,8 +145,28 @@ def main(usdt_amount):
             arbit_side = 'WEX --> BIN'
         arbit_percent = 100 - ((usdt_amount / max_usdt_amount) * 100)
         if arbit_percent > 3:
-            writing_log_line = f'Арбитраж = {arbit_side:.2f} {arbit_percent}%'
-            write_logs(line=writing_log_line)
+            if second_counter < 600:
+                arbit_percent_mass.append(arbit_percent)
+                arbit_time_mass.append(datetime.now())
+                second_counter = 0
+                time.sleep(10)
+                continue
+            elif second_counter >= 600:
+                max_arbit_percent = max(arbit_percent_mass)
+                min_arbit_percent = min(arbit_percent_mass)
+                writing_log_line = '[{} - {}] - {}, min = {:.2f}, max = {:.2f}'.format(arbit_time_mass[0], arbit_time_mass[-1],
+                        arbit_side, min_arbit_percent, max_arbit_percent)
+                second_counter = 0
+                write_logs(line=writing_log_line)
+                arbit_time_mass.clear()
+                arbit_percent_mass.clear()
+                time.sleep(10)
+                continue
+        time_finish = time.time()
+        if second_counter >= 600:
+            second_counter = 0
+        else:
+            second_counter += time_finish - time_start
         time.sleep(10)
 
 
