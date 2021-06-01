@@ -153,6 +153,8 @@ def main(usdt_amount):
                 time.sleep(10)
                 continue
         elif second_counter >= 600:
+            if len(arbit_percent_mass) < 1:
+                continue
             max_arbit_percent = max(arbit_percent_mass)
             min_arbit_percent = min(arbit_percent_mass)
             writing_log_line = '[{} - {}] - {}, min = {:.2f}, max = {:.2f}'.format(arbit_time_mass[0], arbit_time_mass[-1],

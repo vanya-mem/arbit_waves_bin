@@ -119,9 +119,11 @@ def main(amount):
         usdt_sell_price = usdn_sum_wex / amount
         usdt_buy_price = usdt_sum_bin / amount
         if usdt_sell_price > 1.01:
-            write_log(f'Sell_price = {usdt_sell_price:.3f}% {price_deflect_side}')
+            price_deflect_side = 'BIN --> WEX'
+            write_log(f'Sell_price = {usdt_sell_price:.3f}% {price_deflect_side}' + '\n')
         elif usdt_buy_price < 0.99:
-            write_log(f'Buy_price = {usdt_buy_price:.3f}% {price_deflect_side}')
+            price_deflect_side = 'WEX --> BIN'
+            write_log(f'Buy_price = {usdt_buy_price:.3f}% {price_deflect_side}' + '\n')
         else:
             print(f'BUY_PRICE = {usdt_buy_price:.3f}' + '\n' + f'SELL_PRICE = {usdt_sell_price:.3f}')
             print('------------------')
