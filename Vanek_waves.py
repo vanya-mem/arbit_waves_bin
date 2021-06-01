@@ -8,6 +8,7 @@ USDN_ID = 'DG2xFkPdDwKUoBkzGAhQtLpSGzfXLiCYPEzeKH2Ad24p'
 WAVES_ASSET = pw.Asset(WAVES_ID)
 USDN_ASSET = pw.Asset(USDN_ID)
 ASSET_PAIR = pw.AssetPair(WAVES_ASSET, USDN_ASSET)
+TIME_SLEEP = 10
 
 
 def get_orderbook_wex():
@@ -122,7 +123,7 @@ def write_logs(line):
     month = get_time.month
     year = get_time.year
     with open('arbit_log.txt', 'a', encoding='utf8') as file:
-        file.write(f'{hour}:{minute}:{seconds} - {day}.{month}.{year} - ' + line + '\n')
+        file.write(line + '\n')
 
 
 def main(usdt_amount):
@@ -144,30 +145,38 @@ def main(usdt_amount):
         elif max_usdt_amount == usdt_bin:
             arbit_side = 'WEX --> BIN'
         arbit_percent = 100 - ((usdt_amount / max_usdt_amount) * 100)
-        if arbit_percent > 3:
-            if second_counter < 600:
+        if second_counter < 600:
+            if arbit_percent > 1.5:
                 arbit_percent_mass.append(arbit_percent)
                 arbit_time_mass.append(datetime.now())
                 second_counter = 0
                 time.sleep(10)
                 continue
-            elif second_counter >= 600:
+        elif second_counter >= 600:
+            max_arbit_percent = max(arbit_percent_mass)
+            min_arbit_percent = min(arbit_percent_mass)
+            writing_log_line = '[{} - {}] - {}, min = {:.2f}, max = {:.2f}'.format(arbit_time_mass[0], arbit_time_mass[-1],
+                    arbit_side, min_arbit_percent, max_arbit_percent)
+            second_counter = 0
+            write_logs(line=writing_log_line)
+            arbit_time_mass.clear()
+            arbit_percent_mass.clear()
+            time.sleep(10)
+            continue
+        time_finish = time.time()
+        if second_counter >= 600:
+            if len(arbit_percent_mass) > 0:
                 max_arbit_percent = max(arbit_percent_mass)
                 min_arbit_percent = min(arbit_percent_mass)
                 writing_log_line = '[{} - {}] - {}, min = {:.2f}, max = {:.2f}'.format(arbit_time_mass[0], arbit_time_mass[-1],
                         arbit_side, min_arbit_percent, max_arbit_percent)
-                second_counter = 0
-                write_logs(line=writing_log_line)
+                write_logs(writing_log_line)
                 arbit_time_mass.clear()
                 arbit_percent_mass.clear()
-                time.sleep(10)
-                continue
-        time_finish = time.time()
-        if second_counter >= 600:
             second_counter = 0
         else:
-            second_counter += time_finish - time_start
-        time.sleep(10)
+            second_counter += time_finish - time_start + 10
+        time.sleep(TIME_SLEEP)
 
 
 main(20000)

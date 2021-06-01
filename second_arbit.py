@@ -107,31 +107,27 @@ def write_log(line):
                    + f'Отклонение = {line}')
 
 
-def main(usdt_amount):
+def main(amount):
     pw.setNode(node='http://nodes.wavesnodes.com', chain='mainnet')
     pw.setMatcher(node='https://matcher.waves.exchange')
     while True:
-        waves_sum_bin = calc_waves_for_usdt_binance(usdt_amount)
+        waves_sum_bin = calc_waves_for_usdt_binance(amount)
         usdn_sum_wex = calc_usdn_for_waves_wex(waves_sum_bin)
-        waves_sum_wex = calc_waves_for_usdn_wex(usdt_amount)
+        waves_sum_wex = calc_waves_for_usdn_wex(amount)
         usdt_sum_bin = calc_usdt_for_waves_bin(waves_sum_wex)
         price_deflect_side = None
-        price_deflect_bin_to_wex = usdn_sum_wex / usdt_amount
-        price_deflect_wex_to_bin = usdt_sum_bin / usdt_amount
-        max_price_deflect = max(price_deflect_bin_to_wex, price_deflect_wex_to_bin)
-        if max_price_deflect > 1.01:
-            print('В цене найдено нужное отклонение')
-            if max_price_deflect == price_deflect_wex_to_bin:
-                price_deflect_side = 'WEX --> BIN'
-            elif max_price_deflect == price_deflect_bin_to_wex:
-                price_deflect_side = 'BIN --> WEX'
-            write_log(f'{max_price_deflect:.2f}% {price_deflect_side}')
+        usdt_sell_price = usdn_sum_wex / amount
+        usdt_buy_price = usdt_sum_bin / amount
+        if usdt_sell_price > 1.01:
+            write_log(f'Sell_price = {usdt_sell_price:.2f}% {price_deflect_side}')
+        elif usdt_buy_price < 0.99:
+            write_log(f'Buy_price = {usdt_buy_price:.2f}% {price_deflect_side}')
         else:
-            print('Нужного отклонения в цене не найдено')
+            print(f'BUY_PRICE = {usdt_buy_price}' + '\n' + f'SELL_PRICE = {usdt_sell_price}')
         time.sleep(10)
 
 
-main(usdt_amount=20000)
+main(amount=20000)
 
 
 
