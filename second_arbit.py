@@ -104,7 +104,7 @@ def write_log(line):
     get_time = datetime.now()
     with open('price_deflect.txt', 'a', encoding='utf8') as file:
         file.write(f'{get_time.hour}:{get_time.minute}:{get_time.second} - {get_time.day}.{get_time.month}.{get_time.year}'
-                   + f'Отклонение = {line}')
+                   + '' + f'Отклонение = {line}')
 
 
 def main(amount):
