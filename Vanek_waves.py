@@ -115,25 +115,17 @@ def get_amounts(usdt_amount):
 
 
 def write_logs(line):
-    get_time = datetime.now()
-    hour = get_time.hour
-    minute = get_time.minute
-    seconds = get_time.second
-    day = get_time.day
-    month = get_time.month
-    year = get_time.year
     with open('arbit_log.txt', 'a', encoding='utf8') as file:
         file.write(line + '\n')
 
 
 def main(usdt_amount):
-    arbit_percent_mass = []
-    arbit_time_mass = []
-    second_counter = 0
+    arbit_percent_dict = {'WEX-BIN': [], 'BIN-WEX': []}
+    arbit_time_array_bin_to_wex = []
+    arbit_time_array_wex_to_bin = []
     pw.setNode(node='http://nodes.wavesnodes.com', chain='mainnet')
     pw.setMatcher(node='https://matcher.waves.exchange')
     while True:
-        time_start = time.time()
         usdt_wex, usdt_bin = get_amounts(usdt_amount)
         print(f'BIN --> WEX: {usdt_amount}$ --> {usdt_wex:.2f}$')
         print(f'WEX --> BIN: {usdt_amount}$ --> {usdt_bin:.2f}$')
@@ -145,40 +137,62 @@ def main(usdt_amount):
         elif max_usdt_amount == usdt_bin:
             arbit_side = 'WEX --> BIN'
         arbit_percent = 100 - ((usdt_amount / max_usdt_amount) * 100)
-        if second_counter < 600:
-            if arbit_percent > 1.5:
-                arbit_percent_mass.append(arbit_percent)
-                arbit_time_mass.append(datetime.now())
-                second_counter = 0
-                time.sleep(10)
+        if arbit_percent > 1.5:
+            if arbit_side == 'BIN --> WEX':
+                arbit_time_array_bin_to_wex.append(datetime.now())
+                arbit_percent_dict['BIN-WEX'].append(arbit_percent)
+                time.sleep(TIME_SLEEP)
                 continue
-        elif second_counter >= 600:
-            if len(arbit_percent_mass) < 1:
+            elif arbit_side == 'WEX --> BIN':
+                arbit_time_array_wex_to_bin.append(datetime.now())
+                arbit_percent_dict['WEX-BIN'].append(arbit_percent)
+                time.sleep(TIME_SLEEP)
                 continue
-            max_arbit_percent = max(arbit_percent_mass)
-            min_arbit_percent = min(arbit_percent_mass)
-            writing_log_line = '[{} - {}] - {}, min = {:.2f}, max = {:.2f}'.format(arbit_time_mass[0], arbit_time_mass[-1],
-                    arbit_side, min_arbit_percent, max_arbit_percent)
-            second_counter = 0
-            write_logs(line=writing_log_line)
-            arbit_time_mass.clear()
-            arbit_percent_mass.clear()
-            time.sleep(10)
-            continue
-        time_finish = time.time()
-        if second_counter >= 600:
-            if len(arbit_percent_mass) > 0:
-                max_arbit_percent = max(arbit_percent_mass)
-                min_arbit_percent = min(arbit_percent_mass)
-                writing_log_line = '[{} - {}] - {}, min = {:.2f}, max = {:.2f}'.format(arbit_time_mass[0], arbit_time_mass[-1],
-                        arbit_side, min_arbit_percent, max_arbit_percent)
-                write_logs(writing_log_line)
-                arbit_time_mass.clear()
-                arbit_percent_mass.clear()
-            second_counter = 0
         else:
-            second_counter += time_finish - time_start + 10
-        time.sleep(TIME_SLEEP)
+            if len(arbit_percent_dict) > 0:
+                if len(arbit_percent_dict['BIN-WEX']) > 0:
+                    if len(arbit_percent_dict['BIN-WEX']) == 1:
+                        write_arbit_side = 'BIN --> WEX'
+                        arbit_percent = arbit_percent_dict['BIN-WEX']
+                        write_short_log_line = '{} - {}. Арбитраж = {}'.format(arbit_time_array_bin_to_wex[0],
+                        write_arbit_side, arbit_percent)
+                        write_logs(write_short_log_line)
+                        arbit_time_array_bin_to_wex.clear()
+                        arbit_percent_dict['BIN-WEX'].clear()
+                        time.sleep(TIME_SLEEP)
+                        continue
+                    write_arbit_side = 'BIN --> WEX'
+                    max_aribt_percent = max(arbit_percent_dict['BIN-WEX'])
+                    min_arbit_percent = min(arbit_percent_dict['BIN-WEX'])
+                    write_log_line = '[{} - {}] - {}. Max = {}, min = {}'.format(arbit_time_array_bin_to_wex[0],
+                    arbit_time_array_bin_to_wex[-1], write_arbit_side, max_aribt_percent, min_arbit_percent)
+                    write_logs(write_log_line)
+                    arbit_percent_dict['BIN-WEX'].clear()
+                    arbit_time_array_bin_to_wex.clear()
+                    time.sleep(TIME_SLEEP)
+                    continue
+                elif len(arbit_percent_dict['WEX-BIN']) > 0:
+                    if len(arbit_percent_dict['WEX-BIN']) == 1:
+                        write_arbit_side = 'WEX --> BIN'
+                        arbit_percent = arbit_percent_dict['WEX-BIN']
+                        write_short_log_line = '{} - {}. Арбитраж = {}'.format(arbit_time_array_wex_to_bin[0],
+                        write_arbit_side, arbit_percent)
+                        write_logs(write_short_log_line)
+                        arbit_time_array_wex_to_bin.clear()
+                        arbit_percent_dict['WEX-BIN'].clear()
+                        time.sleep(TIME_SLEEP)
+                        continue
+                    write_arbit_side = 'WEX --> BIN'
+                    max_aribt_percent = max(arbit_percent_dict['WEX-BIN'])
+                    min_arbit_percent = min(arbit_percent_dict['WEX-BIN'])
+                    write_log_line = '[{} - {}] - {}. Max = {}, min = {}'.format(arbit_time_array_wex_to_bin[0],
+                    arbit_time_array_wex_to_bin[-1], write_arbit_side, max_aribt_percent, min_arbit_percent)
+                    write_logs(write_log_line)
+                    arbit_percent_dict['WEX-BIN'].clear()
+                    arbit_time_array_wex_to_bin.clear()
+                    time.sleep(TIME_SLEEP)
+                    continue
+            time.sleep(TIME_SLEEP)
 
 
 main(20000)
