@@ -147,7 +147,7 @@ def main(amount):
 
         else:
             if len(sell_and_buy_price_dict.values()) > 0:
-                if sell_and_buy_price_dict[price_deflect_bin] in sell_and_buy_price_dict.keys():
+                if price_deflect_bin in sell_and_buy_price_dict.keys():
                     log_line = '[{} -{}] - {}, max = {}, min = {}'.format(time_array_sell_price[0],
                     time_array_sell_price[-1], 'BIN --> WEX', max(sell_and_buy_price_dict[price_deflect_bin]),
                     min(sell_and_buy_price_dict[price_deflect_bin]))
