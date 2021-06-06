@@ -149,14 +149,14 @@ def main(amount):
             if len(sell_and_buy_price_dict.values()) > 0:
                 if len(sell_and_buy_price_dict['sell_price']) > 0:
                     log_line = '[{} -{}] - {}, max = {}, min = {}'.format(time_array_sell_price[0],
-                    time_array_sell_price[-1], 'BIN --> WEX', max(sell_and_buy_price_dict['sell_price']),
-                    min(sell_and_buy_price_dict['sell_price']))
+                    time_array_sell_price[-1], 'BIN --> WEX', max(sell_and_buy_price_dict[price_deflect_bin]),
+                    min(sell_and_buy_price_dict[price_deflect_bin]))
                     write_log(log_line)
                     time_array_sell_price.clear()
 
                 log_line = '[{} -{}] - {}, max = {}, min = {}'.format(time_array_buy_price[0],
-                time_array_buy_price[-1], 'WEX --> BIN', max(sell_and_buy_price_dict['buy_price']),
-                min(sell_and_buy_price_dict['buy_price']))
+                time_array_buy_price[-1], 'WEX --> BIN', max(sell_and_buy_price_dict[price_deflect_wex]),
+                min(sell_and_buy_price_dict[price_deflect_wex]))
                 write_log(log_line)
                 time_array_buy_price.clear()
                 sell_and_buy_price_dict = {}
