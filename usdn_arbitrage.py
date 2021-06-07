@@ -106,96 +106,88 @@ def write_log(line):
         file.write(line + '\n')
 
 
-def check_buy_prices(buy_prices_dict, buy_prices_time_array):
-    buy_price_deflect_side = 'WEX --> BIN'
-    max_buy_price = max(buy_prices_dict['buy_price'])
-    min_buy_price = min(buy_prices_dict['buy_price'])
-    writing_buy_log_line = '[{} - {}] - {}, min = {}, max = {}'.format(buy_prices_time_array[0],
-    buy_prices_time_array[-1], buy_price_deflect_side, min_buy_price, max_buy_price)
-    write_log(writing_buy_log_line)
+def get_amounts(amount):
+    waves_sum_bin = calc_waves_for_usdt_binance(amount)
+    usdn_sum_wex = calc_usdn_for_waves_wex(waves_sum_bin)
+    waves_sum_wex = calc_waves_for_usdn_wex(amount)
+    usdt_sum_bin = calc_usdt_for_waves_bin(waves_sum_wex)
+    usdt_sell_price = usdn_sum_wex / amount
+    usdt_buy_price = amount / usdt_sum_bin
+
+    return usdt_sell_price, usdt_buy_price
 
 
-def check_sell_prices(sell_prices_dict, sell_prices_time_array):
-    sell_price_deflect_side = 'BIN --> WEX'
-    max_sell_price = max(sell_prices_dict['sell_price'])
-    min_sell_price = min(sell_prices_dict['sell_price'])
-    writing_sell_log_line = '[{} - {}] - {}, min = {}, max = {}'.format(sell_prices_time_array[0],
-    sell_prices_time_array[-1], sell_price_deflect_side, min_sell_price, max_sell_price)
-    write_log(writing_sell_log_line)
+def print_prices(sell_price, buy_price):
+    print(f'SELL_PRICE = {sell_price:.3f}' + '\n' + f'BUY_PRICE = {buy_price:.3f}')
+    print('------------------')
+
+
+def write_log_line(prices_and_time_dict):
+    if len(prices_and_time_dict['sell_prices']) == 1:
+        direction = 'BIN --> WEX'
+        line = '{} - {}. Цена продажи = {}'.format(prices_and_time_dict['times_sell_price'][0], direction,
+        prices_and_time_dict['sell_prices'][0])
+        write_log(line)
+    elif len(prices_and_time_dict['buy_prices']) == 1:
+        direction = 'WEX --> BIN'
+        line = '{} - {}. Цена покупки = {}'.format(prices_and_time_dict['times_buy_price'][0], direction,
+        prices_and_time_dict['buy_prices'][0])
+        write_log(line)
+    elif len(prices_and_time_dict['sell_prices']) > 1:
+        direction = 'BIN --> WEX'
+        line = '[{} - {}] - {}. Цена продажи: max = {}, min = {}'.format(prices_and_time_dict['times_sell_price'][0],
+        prices_and_time_dict['times_sell_price'][-1], direction, max(prices_and_time_dict['sell_prices']),
+        min(prices_and_time_dict['sell_prices']))
+        write_log(line)
+    elif len(prices_and_time_dict['buy_prices']) > 1:
+        direction = 'WEX --> BIN'
+        line = '[{} - {}] - {}. Цена покупки: max = {}, min = {}'.format(prices_and_time_dict['times_buy_price'][0],
+        prices_and_time_dict['times_buy_price'][-1], direction, max(prices_and_time_dict['buy_prices']),
+        min(prices_and_time_dict['buy_prices']))
+        write_log(line)
 
 
 def main(amount):
-    sell_and_buy_price_dict = {'sell_price': [], 'buy_price': []}
-    time_array_sell_price = []
-    time_array_buy_price = []
+    sell_and_buy_price_dict = {}
     pw.setNode(node='http://nodes.wavesnodes.com', chain='mainnet')
     pw.setMatcher(node='https://matcher.waves.exchange')
     while True:
-        waves_sum_bin = calc_waves_for_usdt_binance(amount)
-        usdn_sum_wex = calc_usdn_for_waves_wex(waves_sum_bin)
-        waves_sum_wex = calc_waves_for_usdn_wex(amount)
-        usdt_sum_bin = calc_usdt_for_waves_bin(waves_sum_wex)
-        usdt_sell_price = usdn_sum_wex / amount
-        usdt_buy_price = amount / usdt_sum_bin
+        usdt_sell_price, usdt_buy_price = get_amounts(amount)
         if usdt_sell_price > 1.01:
-            time_array_sell_price.append(datetime.now())
-            sell_and_buy_price_dict['sell_price'].append(usdt_sell_price)
+            if 'sell_prices' not in sell_and_buy_price_dict.keys():
+                sell_and_buy_price_dict['times_sell_price'] = [datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
+                sell_and_buy_price_dict['sell_prices'] = [usdt_sell_price]
+            else:
+                sell_and_buy_price_dict['times_sell_price'].append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                sell_and_buy_price_dict['sell_prices'].append(usdt_sell_price)
             time.sleep(TIME_SLEEP)
             continue
+
         elif usdt_buy_price < 0.99:
-            time_array_buy_price.append(datetime.now())
-            sell_and_buy_price_dict['buy_price'].append(usdt_buy_price)
+            if 'buy_prices' not in sell_and_buy_price_dict.keys():
+                sell_and_buy_price_dict['times_buy_price'] = [datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
+                sell_and_buy_price_dict['buy_prices'] = [usdt_buy_price]
+            else:
+                sell_and_buy_price_dict['times_buy_price'].append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                sell_and_buy_price_dict['buy_prices'].append(usdt_buy_price)
             time.sleep(TIME_SLEEP)
             continue
-        elif usdt_sell_price < 1.01:
-            if len(sell_and_buy_price_dict['sell_price']) > 0:
-                price_deflect_side = 'BIN --> WEX'
-                max_deflect_sell_price = max(sell_and_buy_price_dict['sell_price'])
-                min_deflect_sell_price = min(sell_and_buy_price_dict['sell_price'])
-                if len(sell_and_buy_price_dict['sell_price']) == 1:
-                    write_short_log_line = '{} - {}. Price deflection = {}'.format(time_array_sell_price[0],
-                    price_deflect_side, max_deflect_sell_price)
-                    write_log(write_short_log_line)
-                    time_array_sell_price.clear()
-                    sell_and_buy_price_dict['sell_price'].clear()
-                    time.sleep(TIME_SLEEP)
-                    continue
-                write_log_line = '[{} - {}] - {}, min = {:.3f}, max = {:.3f}'.format(time_array_sell_price[0],
-                time_array_sell_price[-1], price_deflect_side, min_deflect_sell_price, max_deflect_sell_price)
-                write_log(write_log_line)
-                time_array_sell_price.clear()
-                sell_and_buy_price_dict['sell_price'].clear()
+
+        else:
+            if len(sell_and_buy_price_dict.values()) > 0:
+                if 'sell_prices' in sell_and_buy_price_dict.keys():
+                    write_log_line(sell_and_buy_price_dict)
+
+                elif 'buy_prices' in sell_and_buy_price_dict.keys():
+                    write_log_line(sell_and_buy_price_dict)
+
+                sell_and_buy_price_dict = {}
                 time.sleep(TIME_SLEEP)
                 continue
-        elif usdt_buy_price > 0.99:
-            if len(sell_and_buy_price_dict['buy_price']) > 0:
-                price_deflect_side = 'WEX --> BIN'
-                max_deflect_buy_price = max(sell_and_buy_price_dict['buy_price'])
-                min_deflect_buy_price = min(sell_and_buy_price_dict['buy_price'])
-                if len(sell_and_buy_price_dict['buy_price']) == 1:
-                    write_short_log_line = '{} - {}. Price deflection = {}'.format(time_array_buy_price[0],
-                    price_deflect_side, max_deflect_buy_price)
-                    write_log(write_short_log_line)
-                    time_array_buy_price.clear()
-                    sell_and_buy_price_dict['buy_price'].clear()
-                    time.sleep(TIME_SLEEP)
-                    continue
-                write_log_line = '[{} - {}] - {}, min = {:.3f}, max = {:.3f}'.format(time_array_buy_price[0],
-                time_array_buy_price[-1], price_deflect_side, min_deflect_buy_price, max_deflect_buy_price)
-                write_log(write_log_line)
-                time_array_buy_price.clear()
-                sell_and_buy_price_dict['buy_price'].clear()
+
+            else:
+                print_prices(usdt_sell_price, usdt_buy_price)
                 time.sleep(TIME_SLEEP)
-                continue
-        print(f'SELL_PRICE = {usdt_sell_price:.3f}' + '\n' + f'BUY_PRICE = {usdt_buy_price:.3f}')
-        print('------------------')
-        time.sleep(TIME_SLEEP)
 
 
 main(amount=20000)
-
-
-
-
-
-
