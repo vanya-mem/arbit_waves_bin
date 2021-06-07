@@ -154,11 +154,12 @@ def main(amount):
                     write_log(log_line)
                     time_array_sell_price.clear()
 
-                log_line = '[{} -{}] - {}, max = {}, min = {}'.format(time_array_buy_price[0],
-                time_array_buy_price[-1], 'WEX --> BIN', max(sell_and_buy_price_dict[price_deflect_wex]),
-                min(sell_and_buy_price_dict[price_deflect_wex]))
-                write_log(log_line)
-                time_array_buy_price.clear()
+                if price_deflect_wex in sell_and_buy_price_dict.keys():
+                    log_line = '[{} -{}] - {}, max = {}, min = {}'.format(time_array_buy_price[0],
+                    time_array_buy_price[-1], 'WEX --> BIN', max(sell_and_buy_price_dict[price_deflect_wex]),
+                    min(sell_and_buy_price_dict[price_deflect_wex]))
+                    write_log(log_line)
+                    time_array_buy_price.clear()
                 sell_and_buy_price_dict = {}
                 time.sleep(TIME_SLEEP)
                 continue
