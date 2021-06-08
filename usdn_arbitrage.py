@@ -116,12 +116,12 @@ def print_prices(sell_price, buy_price):
     print('------------------')
 
 
-def write_log_line(time_array, prices_array, direction_array):
+def write_log_line(time_array, prices_array, price_side_array):
     if len(prices_array) == 1:
-        log_line = '{} - {}, Price = {}'.format(time_array[0], direction_array[0], prices_array[0])
+        log_line = '{} - {}, Price = {}'.format(time_array[0], price_side_array[0], prices_array[0])
         write_log(log_line)
     elif len(prices_array) > 1:
-        log_line = '[{} - {}] - {}. Max = {}, min = {}'.format(time_array[0], time_array[-1], direction_array[0],
+        log_line = '[{} - {}] - {}. Max = {}, min = {}'.format(time_array[0], time_array[-1], price_side_array[0],
         max(prices_array), min(prices_array))
         write_log(log_line)
 
@@ -129,35 +129,35 @@ def write_log_line(time_array, prices_array, direction_array):
 def main(amount):
     prices_array = []
     time_array = []
-    direction_array = []
+    price_side_array = []
     pw.setNode(node='http://nodes.wavesnodes.com', chain='mainnet')
     pw.setMatcher(node='https://matcher.waves.exchange')
     while True:
         usdt_sell_price, usdt_buy_price = get_amounts(amount)
 
-        if usdt_sell_price > 1.01:
-            direction = 'BIN --> WEX'
-            if 'WEX --> BIN' in direction_array:
-                write_log_line(time_array, prices_array, direction_array)
-                direction_array.clear()
+        if usdt_sell_price > 1.01:  #BIN --> WEX
+            price_side = 'UP'
+            if 'DOWN' in price_side_array:
+                write_log_line(time_array, prices_array, price_side_array)
+                price_side_array.clear()
                 time_array.clear()
                 prices_array.clear()
 
-            direction_array.append(direction)
+            price_side_array.append(price_side)
             time_array.append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             prices_array.append(usdt_sell_price)
             time.sleep(TIME_SLEEP)
             continue
 
-        elif usdt_buy_price < 0.99:
-            direction = 'WEX --> BIN'
-            if 'BIN --> WEX' in direction_array:
-                write_log_line(time_array, prices_array, direction_array)
-                direction_array.clear()
+        elif usdt_buy_price < 0.99:  #WEX --> BIN
+            price_side = 'DOWN'
+            if 'UP' in price_side_array:
+                write_log_line(time_array, prices_array, price_side_array)
+                price_side_array.clear()
                 time_array.clear()
                 prices_array.clear()
 
-            direction_array.append(direction)
+            price_side_array.append(price_side)
             time_array.append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             prices_array.append(usdt_buy_price)
             time.sleep(TIME_SLEEP)
@@ -165,9 +165,9 @@ def main(amount):
 
         else:
             if len(prices_array) > 0:
-                write_log_line(time_array, prices_array, direction_array)
+                write_log_line(time_array, prices_array, price_side_array)
                 time_array.clear()
-                direction_array.clear()
+                price_side_array.clear()
                 prices_array.clear()
                 time.sleep(TIME_SLEEP)
                 continue
