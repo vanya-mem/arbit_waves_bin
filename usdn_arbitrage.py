@@ -118,7 +118,7 @@ def print_prices(sell_price, buy_price):
 
 def write_log_line(time_array, prices_array, price_side_array):
     if len(prices_array) == 1:
-        log_line = '{} - {}, Price = {}'.format(time_array[0], price_side_array[0], prices_array[0])
+        log_line = '{} - {} - {}'.format(time_array[0], price_side_array[0], prices_array[0])
         write_log(log_line)
     elif len(prices_array) > 1:
         log_line = '[{} - {}] - {}. Max = {}, min = {}'.format(time_array[0], time_array[-1], price_side_array[0],
