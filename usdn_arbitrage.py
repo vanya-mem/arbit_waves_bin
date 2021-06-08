@@ -129,48 +129,41 @@ def write_log_line(time_array, prices_array, price_side_array):
 def main(amount):
     prices_array = []
     time_array = []
-    price_side_array = []
+    direction = None
     pw.setNode(node='http://nodes.wavesnodes.com', chain='mainnet')
     pw.setMatcher(node='https://matcher.waves.exchange')
     while True:
         usdt_sell_price, usdt_buy_price = get_amounts(amount)
 
         if usdt_sell_price > 1.01:  #BIN --> WEX
-            price_side = 'UP'
-            if 'DOWN' in price_side_array:
-                write_log_line(time_array, prices_array, price_side_array)
-                price_side_array.clear()
+            if direction is None:
+                direction = 'UP'
+            elif direction == 'DOWN':
+                write_log_line(time_array, prices_array, direction)
                 time_array.clear()
                 prices_array.clear()
+                direction = 'UP'
 
-            price_side_array.append(price_side)
             time_array.append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             prices_array.append(usdt_sell_price)
-            time.sleep(TIME_SLEEP)
-            continue
 
         elif usdt_buy_price < 0.99:  #WEX --> BIN
-            price_side = 'DOWN'
-            if 'UP' in price_side_array:
-                write_log_line(time_array, prices_array, price_side_array)
-                price_side_array.clear()
+            if direction is None:
+                direction = 'DOWN'
+            elif direction == 'UP':
+                write_log_line(time_array, prices_array, direction)
                 time_array.clear()
                 prices_array.clear()
+                direction = 'DOWN'
 
-            price_side_array.append(price_side)
             time_array.append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             prices_array.append(usdt_buy_price)
-            time.sleep(TIME_SLEEP)
-            continue
 
         else:
             if len(prices_array) > 0:
-                write_log_line(time_array, prices_array, price_side_array)
+                write_log_line(time_array, prices_array, direction)
                 time_array.clear()
-                price_side_array.clear()
                 prices_array.clear()
-                time.sleep(TIME_SLEEP)
-                continue
 
         print_prices(usdt_sell_price, usdt_buy_price)
         time.sleep(TIME_SLEEP)
