@@ -77,9 +77,12 @@ def messages(message):
     new_message = message.text.strip().lower()
 
     if new_message == '/go':
+        if len(bot_spam) > 2:
+            bot_spam.clear()
+            bot_spam.append(new_message)
         bot_spam.append(new_message)
         start_process_mess = ('Скрипт начал работу...' + '\n' + '\n' + 'Если вы хотите прекратить работу, то выберите' +
-        '' + 'команду /stop')
+        ' ' + 'команду /stop')
         bot.send_message(chat_id=message.from_user.id, text=start_process_mess)
         start_arbitrage()
 
