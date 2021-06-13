@@ -11,6 +11,9 @@ ASSET_PAIR = pw.AssetPair(WAVES_ASSET, USDN_ASSET)
 TIME_SLEEP = 10
 TRANCHE_SIZE = 20000
 TARGET_ARBITRAGE = 1.5  # in percents
+percents = []
+timestamps = []
+direction = None
 
 
 def get_orderbook_wex():
@@ -24,7 +27,13 @@ def get_orderbook_bin():
 
 
 def calc_waves_for_usdt_bin(usdt_amount):
-    order_book = get_orderbook_bin()['asks']
+    try:
+        order_book = get_orderbook_bin()['asks']
+    except Exception:
+        if len(percents) > 0:
+            log_arbitrage(percents, timestamps, direction)
+        main()
+
     usdt_sum = 0
     waves_sum = 0
     for order in order_book:
@@ -42,7 +51,13 @@ def calc_waves_for_usdt_bin(usdt_amount):
 
 
 def calc_waves_for_usdt_wex(usdt_amount):
-    order_book = get_orderbook_wex()['asks']
+    try:
+        order_book = get_orderbook_wex()['asks']
+    except Exception:
+        if len(percents) > 0:
+            log_arbitrage(percents, timestamps, direction)
+        main()
+
     usdt_sum = 0
     waves_sum = 0
     for order in order_book:
@@ -60,7 +75,13 @@ def calc_waves_for_usdt_wex(usdt_amount):
 
 
 def calc_usdt_for_waves_bin(waves_amount):
-    order_book = get_orderbook_bin()['bids']
+    try:
+        order_book = get_orderbook_bin()['bids']
+    except Exception:
+        if len(percents) > 0:
+            log_arbitrage(percents, timestamps, direction)
+        main()
+
     usdt_sum = 0
     waves_sum = 0
     for order in order_book:
@@ -77,7 +98,13 @@ def calc_usdt_for_waves_bin(waves_amount):
 
 
 def calc_usdt_for_waves_wex(waves_amount):
-    order_book = get_orderbook_wex()['bids']
+    try:
+        order_book = get_orderbook_wex()['bids']
+    except Exception:
+        if len(percents) > 0:
+            log_arbitrage(percents, timestamps, direction)
+        main()
+
     usdt_sum = 0
     waves_sum = 0
     for order in order_book:
@@ -125,11 +152,8 @@ def print_amounts(usdt_amount, usdt_amount_wex, usdt_amount_bin):
 def main():
     pw.setNode(node='http://nodes.wavesnodes.com', chain='mainnet')
     pw.setMatcher(node='https://matcher.waves.exchange')
-
-    percents = []
-    timestamps = []
-    direction = None
     while True:
+        global direction
         usdt_amount_wex, usdt_amount_bin = get_amounts(TRANCHE_SIZE)
         print_amounts(TRANCHE_SIZE, usdt_amount_wex, usdt_amount_bin)
 

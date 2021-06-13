@@ -9,7 +9,11 @@ USDN_ID = 'DG2xFkPdDwKUoBkzGAhQtLpSGzfXLiCYPEzeKH2Ad24p'
 WAVES_ASSET = pw.Asset(WAVES_ID)
 USDN_ASSET = pw.Asset(USDN_ID)
 ASSET_PAIR = pw.AssetPair(WAVES_ASSET, USDN_ASSET)
+TRANCHE_SIZE = 20000
 TIME_SLEEP = 10
+prices_array = []
+time_array = []
+direction = None
 
 
 def get_orderbook_binance():
@@ -23,7 +27,13 @@ def get_orderbook_waves_exchange():
 
 
 def calc_waves_for_usdt_binance(usdt_amount):
-    order_book = get_orderbook_binance()['asks']
+    try:
+        order_book = get_orderbook_binance()['asks']
+    except Exception:
+        if len(prices_array) > 0:
+            write_log_line(time_array, prices_array, direction)
+        main(amount=TRANCHE_SIZE)
+
     usdt_sum = 0
     waves_sum = 0
     for order in order_book:
@@ -41,7 +51,13 @@ def calc_waves_for_usdt_binance(usdt_amount):
 
 
 def calc_waves_for_usdn_wex(usdn_amount):
-    order_book = get_orderbook_waves_exchange()['asks']
+    try:
+        order_book = get_orderbook_waves_exchange()['asks']
+    except Exception:
+        if len(prices_array) > 0:
+            write_log_line(time_array, prices_array, direction)
+        main(amount=TRANCHE_SIZE)
+
     usdn_sum = 0
     waves_sum = 0
     for order in order_book:
@@ -59,7 +75,13 @@ def calc_waves_for_usdn_wex(usdn_amount):
 
 
 def calc_usdt_for_waves_bin(waves_amount):
-    order_book = get_orderbook_binance()['bids']
+    try:
+        order_book = get_orderbook_binance()['bids']
+    except Exception:
+        if len(prices_array) > 0:
+            write_log_line(time_array, prices_array, direction)
+        main(amount=TRANCHE_SIZE)
+
     usdt_sum = 0
     waves_sum = 0
     for order in order_book:
@@ -76,9 +98,13 @@ def calc_usdt_for_waves_bin(waves_amount):
 
 
 def calc_usdn_for_waves_wex(waves_amount):
-    order_book = get_orderbook_waves_exchange()
-    if waves_amount == str(waves_amount):
-        waves_amount = int(waves_amount)
+    try:
+        order_book = get_orderbook_waves_exchange()
+    except Exception:
+        if len(prices_array) > 0:
+            write_log_line(time_array, prices_array, direction)
+        main(amount=TRANCHE_SIZE)
+
     order_book = order_book['bids']
     usdn_sum = 0
     waves_sum = 0
@@ -127,12 +153,10 @@ def write_log_line(time_array, prices_array, direction):
 
 
 def main(amount):
-    prices_array = []
-    time_array = []
-    direction = None
     pw.setNode(node='http://nodes.wavesnodes.com', chain='mainnet')
     pw.setMatcher(node='https://matcher.waves.exchange')
     while True:
+        global direction
         usdt_sell_price, usdt_buy_price = get_amounts(amount)
 
         if usdt_sell_price > 1.01:  #BIN --> WEX
@@ -169,4 +193,4 @@ def main(amount):
         time.sleep(TIME_SLEEP)
 
 
-main(amount=20000)
+main(amount=TRANCHE_SIZE)

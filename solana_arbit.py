@@ -6,6 +6,9 @@ import time
 TIME_SLEEP = 15
 TRANCHE_SIZE = 20000
 TARGET_ARBITRAGE = 1.5
+arbit_percent_array = []
+time_array = []
+direction = None
 
 
 def get_orderbook_binance():
@@ -19,7 +22,13 @@ def get_orderbook_bonfida():
 
 
 def calc_sol_for_usdt_bin(usdt_amount):
-    order_book = get_orderbook_binance()['asks']
+    try:
+        order_book = get_orderbook_binance()['asks']
+    except Exception:
+        if len(arbit_percent_array) > 0:
+            write_log_line(arbit_percent_array, time_array, direction)
+        main()
+
     usdt_sum = 0
     sol_sum = 0
     for order in order_book:
@@ -37,7 +46,13 @@ def calc_sol_for_usdt_bin(usdt_amount):
 
 
 def calc_sol_for_usdt_bonfida(usdt_amount):
-    order_book = get_orderbook_bonfida()['data']['asks']
+    try:
+        order_book = get_orderbook_bonfida()['data']['asks']
+    except Exception:
+        if len(arbit_percent_array) > 0:
+            write_log_line(arbit_percent_array, time_array, direction)
+        main()
+
     usdt_sum = 0
     sol_sum = 0
     for order in order_book:
@@ -55,7 +70,13 @@ def calc_sol_for_usdt_bonfida(usdt_amount):
 
 
 def calc_usdt_for_sol_bin(sol_amount):
-    order_book = get_orderbook_binance()['bids']
+    try:
+        order_book = get_orderbook_binance()['bids']
+    except Exception:
+        if len(arbit_percent_array) > 0:
+            write_log_line(arbit_percent_array, time_array, direction)
+        main()
+
     usdt_sum = 0
     sol_sum = 0
     for order in order_book:
@@ -72,7 +93,13 @@ def calc_usdt_for_sol_bin(sol_amount):
 
 
 def calc_usdt_for_sol_bonfida(sol_amount):
-    order_book = get_orderbook_bonfida()['data']['bids']
+    try:
+        order_book = get_orderbook_bonfida()['data']['bids']
+    except Exception:
+        if len(arbit_percent_array) > 0:
+            write_log_line(arbit_percent_array, time_array, direction)
+        main()
+
     usdt_sum = 0
     sol_sum = 0
     for order in order_book:
@@ -98,6 +125,12 @@ def get_amounts(usdt_amount):
     return usdt_amount_bonfida, usdt_amount_bin
 
 
+def print_amounts(usdt_amount, usdt_amount_bonfida, usdt_amount_bin):
+    print(f'BIN --> BON: {usdt_amount}$ --> {usdt_amount_bonfida:.2f}$')
+    print(f'BON --> BIN: {usdt_amount}$ --> {usdt_amount_bin:.2f}$')
+    print('---------------------------------')
+
+
 def write_log(line):
     print(line + '\n')
     with open('solana_arbit_log.txt', 'a', encoding='utf8') as file:
@@ -114,17 +147,9 @@ def write_log_line(arbit_percent_array, time_array, direction):
         write_log(log_line)
 
 
-def print_amounts(usdt_amount, usdt_amount_bonfida, usdt_amount_bin):
-    print(f'BIN --> BON: {usdt_amount}$ --> {usdt_amount_bonfida:.2f}$')
-    print(f'BON --> BIN: {usdt_amount}$ --> {usdt_amount_bin:.2f}$')
-    print('---------------------------------')
-
-
 def main():
-    arbit_percent_array = []
-    time_array = []
-    direction = None
     while True:
+        global direction
         usdt_amount_bonfida, usdt_amount_bin = get_amounts(TRANCHE_SIZE)
         print_amounts(TRANCHE_SIZE, usdt_amount_bonfida, usdt_amount_bin)
 
