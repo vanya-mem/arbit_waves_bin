@@ -28,11 +28,13 @@ def get_orderbook_waves_exchange():
 
 def calc_waves_for_usdt_binance(usdt_amount):
     try:
-        order_book = get_orderbook_binance()['asks']
+        order_book = get_orderbook_binance()
     except Exception:
         if len(prices_array) > 0:
             write_log_line(time_array, prices_array, direction)
         main(amount=TRANCHE_SIZE)
+    else:
+        order_book = get_orderbook_binance()['asks']
 
     usdt_sum = 0
     waves_sum = 0
@@ -52,11 +54,13 @@ def calc_waves_for_usdt_binance(usdt_amount):
 
 def calc_waves_for_usdn_wex(usdn_amount):
     try:
-        order_book = get_orderbook_waves_exchange()['asks']
+        order_book = get_orderbook_waves_exchange()
     except Exception:
         if len(prices_array) > 0:
             write_log_line(time_array, prices_array, direction)
         main(amount=TRANCHE_SIZE)
+    else:
+        order_book = get_orderbook_waves_exchange()['asks']
 
     usdn_sum = 0
     waves_sum = 0
@@ -76,11 +80,13 @@ def calc_waves_for_usdn_wex(usdn_amount):
 
 def calc_usdt_for_waves_bin(waves_amount):
     try:
-        order_book = get_orderbook_binance()['bids']
+        order_book = get_orderbook_binance()
     except Exception:
         if len(prices_array) > 0:
             write_log_line(time_array, prices_array, direction)
         main(amount=TRANCHE_SIZE)
+    else:
+        order_book = get_orderbook_binance()['bids']
 
     usdt_sum = 0
     waves_sum = 0
@@ -104,8 +110,9 @@ def calc_usdn_for_waves_wex(waves_amount):
         if len(prices_array) > 0:
             write_log_line(time_array, prices_array, direction)
         main(amount=TRANCHE_SIZE)
+    else:
+        order_book = get_orderbook_waves_exchange()['bids']
 
-    order_book = order_book['bids']
     usdn_sum = 0
     waves_sum = 0
     for order in order_book:

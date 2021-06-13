@@ -23,11 +23,13 @@ def get_orderbook_bonfida():
 
 def calc_sol_for_usdt_bin(usdt_amount):
     try:
-        order_book = get_orderbook_binance()['asks']
+        order_book = get_orderbook_binance()
     except Exception:
         if len(arbit_percent_array) > 0:
             write_log_line(arbit_percent_array, time_array, direction)
         main()
+    else:
+        order_book = get_orderbook_binance()['asks']
 
     usdt_sum = 0
     sol_sum = 0
@@ -47,11 +49,13 @@ def calc_sol_for_usdt_bin(usdt_amount):
 
 def calc_sol_for_usdt_bonfida(usdt_amount):
     try:
-        order_book = get_orderbook_bonfida()['data']['asks']
+        order_book = get_orderbook_bonfida()
     except Exception:
         if len(arbit_percent_array) > 0:
             write_log_line(arbit_percent_array, time_array, direction)
         main()
+    else:
+        order_book = get_orderbook_bonfida()['data']['asks']
 
     usdt_sum = 0
     sol_sum = 0
@@ -71,11 +75,13 @@ def calc_sol_for_usdt_bonfida(usdt_amount):
 
 def calc_usdt_for_sol_bin(sol_amount):
     try:
-        order_book = get_orderbook_binance()['bids']
+        order_book = get_orderbook_binance()
     except Exception:
         if len(arbit_percent_array) > 0:
             write_log_line(arbit_percent_array, time_array, direction)
         main()
+    else:
+        order_book = get_orderbook_binance()['bids']
 
     usdt_sum = 0
     sol_sum = 0
@@ -94,11 +100,13 @@ def calc_usdt_for_sol_bin(sol_amount):
 
 def calc_usdt_for_sol_bonfida(sol_amount):
     try:
-        order_book = get_orderbook_bonfida()['data']['bids']
+        order_book = get_orderbook_bonfida()
     except Exception:
         if len(arbit_percent_array) > 0:
             write_log_line(arbit_percent_array, time_array, direction)
         main()
+    else:
+        order_book = get_orderbook_bonfida()['data']['bids']
 
     usdt_sum = 0
     sol_sum = 0

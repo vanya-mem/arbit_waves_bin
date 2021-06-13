@@ -28,11 +28,13 @@ def get_orderbook_bin():
 
 def calc_waves_for_usdt_bin(usdt_amount):
     try:
-        order_book = get_orderbook_bin()['asks']
+        order_book = get_orderbook_bin()
     except Exception:
         if len(percents) > 0:
             log_arbitrage(percents, timestamps, direction)
         main()
+    else:
+        order_book = get_orderbook_bin()['asks']
 
     usdt_sum = 0
     waves_sum = 0
@@ -52,11 +54,13 @@ def calc_waves_for_usdt_bin(usdt_amount):
 
 def calc_waves_for_usdt_wex(usdt_amount):
     try:
-        order_book = get_orderbook_wex()['asks']
+        order_book = get_orderbook_wex()
     except Exception:
         if len(percents) > 0:
             log_arbitrage(percents, timestamps, direction)
         main()
+    else:
+        order_book = get_orderbook_wex()['asks']
 
     usdt_sum = 0
     waves_sum = 0
@@ -76,11 +80,13 @@ def calc_waves_for_usdt_wex(usdt_amount):
 
 def calc_usdt_for_waves_bin(waves_amount):
     try:
-        order_book = get_orderbook_bin()['bids']
+        order_book = get_orderbook_bin()
     except Exception:
         if len(percents) > 0:
             log_arbitrage(percents, timestamps, direction)
         main()
+    else:
+        order_book = get_orderbook_bin()['bids']
 
     usdt_sum = 0
     waves_sum = 0
@@ -99,11 +105,13 @@ def calc_usdt_for_waves_bin(waves_amount):
 
 def calc_usdt_for_waves_wex(waves_amount):
     try:
-        order_book = get_orderbook_wex()['bids']
+        order_book = get_orderbook_wex()
     except Exception:
         if len(percents) > 0:
             log_arbitrage(percents, timestamps, direction)
         main()
+    else:
+        order_book = get_orderbook_wex()['bids']
 
     usdt_sum = 0
     waves_sum = 0
