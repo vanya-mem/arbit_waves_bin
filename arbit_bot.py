@@ -9,7 +9,7 @@ ARBITRAGE_MESSAGES = []
 sol_array = []
 waves_array = []
 usdn_array = []
-bot_spam = []
+user_messages_dict = {}
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -28,7 +28,7 @@ def get_logs():
             usdn_array.append(line)
 
 
-def start_arbitrage():
+def start_arbitrage(user_id):
     get_logs()
     sol_len = len(sol_array)
     waves_len = len(waves_array)
@@ -37,7 +37,7 @@ def start_arbitrage():
     waves_array.clear()
     usdn_array.clear()
     while True:
-        if '/stop' in bot_spam:
+        if '/stop' in user_messages_dict[user_id]:
             break
         else:
             get_logs()
@@ -55,10 +55,9 @@ def start_arbitrage():
                 ARBITRAGE_MESSAGES.append(usdn_arbit_mess)
 
             if len(ARBITRAGE_MESSAGES) > 0:
-                @bot.message_handler()
-                def send_arbit_message(message):
-                    for arbitrage_message in ARBITRAGE_MESSAGES:
-                        bot.send_message(chat_id=message.from_user.id, text=arbitrage_message)
+                for arbitrage_message in ARBITRAGE_MESSAGES:
+                    bot.send_message(chat_id=user_id, text=arbitrage_message)
+                ARBITRAGE_MESSAGES.clear()
             sol_len, waves_len, usdn_len = len(sol_array), len(waves_array), len(usdn_array)
             sol_array.clear()
             waves_array.clear()
@@ -77,17 +76,23 @@ def messages(message):
     new_message = message.text.strip().lower()
 
     if new_message == '/go':
-        if len(bot_spam) > 2:
-            bot_spam.clear()
-            bot_spam.append(new_message)
-        bot_spam.append(new_message)
+        if message.from_user.id not in user_messages_dict.keys():
+            user_messages_dict[message.from_user.id] = [new_message]
+        elif message.from_user.id in user_messages_dict.keys():
+            if '/stop' in user_messages_dict[message.from_user.id]:
+                user_messages_dict[message.from_user.id].clear()
+            elif '/go' in user_messages_dict[message.from_user.id]:
+                user_messages_dict[message.from_user.id].clear()
+            user_messages_dict[message.from_user.id].append(new_message)
         start_process_mess = ('Скрипт начал работу...' + '\n' + '\n' + 'Если вы хотите прекратить работу, то выберите' +
         ' ' + 'команду /stop')
         bot.send_message(chat_id=message.from_user.id, text=start_process_mess)
-        start_arbitrage()
+        start_arbitrage(message.from_user.id)
 
     elif new_message == '/stop':
-        bot_spam.append(new_message)
+        if message.from_user.id not in user_messages_dict.keys():
+            user_messages_dict[message.from_user.id] = [new_message]
+        user_messages_dict[message.from_user.id].append(new_message)
         if len(ARBITRAGE_MESSAGES) > 0:
             for arbit_mess in ARBITRAGE_MESSAGES:
                 bot.send_message(chat_id=message.from_user.id, text=arbit_mess)
