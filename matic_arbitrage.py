@@ -72,9 +72,9 @@ def calc_usdt_for_matic_bin(matic_amount):
     for order in order_book:
         order_price = float(order[0])
         order_matic_amount = float(order[1])
-        sol_sum_diff = min(matic_amount - matic_sum, order_matic_amount)
-        matic_sum += sol_sum_diff
-        usdt_sum += (sol_sum_diff * order_price)
+        matic_sum_diff = min(matic_amount - matic_sum, order_matic_amount)
+        matic_sum += matic_sum_diff
+        usdt_sum += (matic_sum_diff * order_price)
 
         if matic_sum >= matic_amount:
             break
@@ -89,9 +89,9 @@ def calc_usdt_for_matic_okex(matic_amount):
     for order in order_book:
         order_price = float(order[0])
         order_matic_amount = float(order[1])
-        sol_sum_diff = min(matic_amount - matic_sum, order_matic_amount)
-        matic_sum += sol_sum_diff
-        usdt_sum += (sol_sum_diff * order_price)
+        matic_sum_diff = min(matic_amount - matic_sum, order_matic_amount)
+        matic_sum += matic_sum_diff
+        usdt_sum += (matic_sum_diff * order_price)
 
         if matic_sum >= matic_amount:
             break
