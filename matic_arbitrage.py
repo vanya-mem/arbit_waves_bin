@@ -138,7 +138,7 @@ def main():
         print_amounts(TRANCHE_SIZE, usdt_amount_okex, usdt_amount_bin)
 
         arbit_percent_bin = ((usdt_amount_bin - TRANCHE_SIZE) / TRANCHE_SIZE) * 100
-        arbit_percent_bonfida = ((usdt_amount_okex - TRANCHE_SIZE) / TRANCHE_SIZE) * 100
+        arbit_percent_okex = ((usdt_amount_okex - TRANCHE_SIZE) / TRANCHE_SIZE) * 100
 
         if arbit_percent_bin > TARGET_ARBITRAGE:
             if direction is None:
@@ -152,7 +152,7 @@ def main():
             arbitrage_percent_array.append(arbit_percent_bin)
             time_array.append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-        elif arbit_percent_bonfida > TARGET_ARBITRAGE:
+        elif arbit_percent_okex > TARGET_ARBITRAGE:
             if direction is None:
                 direction = 'BIN --> OKEX'
             elif direction == 'OKEX --> BIN':
@@ -161,7 +161,7 @@ def main():
                 time_array.clear()
                 direction = 'BIN --> OKEX'
 
-            arbitrage_percent_array.append(arbit_percent_bonfida)
+            arbitrage_percent_array.append(arbit_percent_okex)
             time_array.append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
         else:
