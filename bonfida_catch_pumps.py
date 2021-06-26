@@ -24,21 +24,21 @@ def calc_sol_for_usdt(usdt_amount):
     first_order_amount = None
     count = 0
     order_book = get_orderbook_bonfida()
-    for order in order_book['data']['asks']:
+    for order in order_book['data']['bids']:
         if count < 1:
             first_order_price = float(order['price'])
             first_order_amount = float(order['size'])
             count += 1
             continue
         order_price = float(order['price'])
-        if (100 - (first_order_price / order_price) * 100) >= 2:
+        if (100 - (first_order_price / order_price) * 100) >= 3:
             if first_order_amount >= 100:
                 timestamps.append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 if (first_order_price * first_order_amount) > TRANCHE_SIZE:
                     SOLANA_AMOUNT = usdt_amount / first_order_price
                     return SOLANA_AMOUNT
-                USDT_RESIDUE = usdt_amount - (first_order_price * first_order_amount)
                 SOLANA_AMOUNT = first_order_amount
+                USDT_RESIDUE = usdt_amount - (first_order_price * SOLANA_AMOUNT)
                 return SOLANA_AMOUNT
 
     return None
@@ -49,14 +49,14 @@ def calc_usdt_for_sol(sol_amount):
     first_order_amount = None
     count = 0
     order_book = get_orderbook_bonfida()
-    for order in order_book['data']['bids']:
+    for order in order_book['data']['asks']:
         if count < 1:
             first_order_price = float(order['price'])
             first_order_amount = float(order['size'])
             count += 1
             continue
         order_price = float(order['price'])
-        if (100 - (order_price / first_order_price) * 100) >= 2:
+        if (100 - (order_price / first_order_price) * 100) >= 3:
             if first_order_amount >= sol_amount:
                 timestamps.append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 usdt_amount = first_order_price * sol_amount
