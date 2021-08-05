@@ -1,5 +1,11 @@
 from pyserum.connection import conn
 from pyserum.market import Market
+from solana.publickey import PublicKey
+from solana.account import Account
+from solana.system_program import transfer, TransferParams
+from solana.transaction import Transaction
+from solana.rpc.api import Client
+import solana.rpc.types as types
 import requests
 
 CONNECT_STATUS = None
@@ -7,6 +13,19 @@ BUY_PRICE = None
 SELL_PRICE = None
 PUBLIC_KEY = None
 WALLET_ADRESS = ''
+SENDER_PRIVATE_KEY = ''
+
+
+def transfer_sol_to_wallet(send_to, api_endpoint, sol_amount, skip_confirmation=True):
+    client = Client(api_endpoint)
+    sender_account = Account(SENDER_PRIVATE_KEY)
+    to_account = PublicKey(send_to)
+    tx = Transaction()
+    signers = [sender_account]
+    transfer_ix = transfer(TransferParams(from_pubkey=sender_account.public_key(), to_pubkey=to_account,
+    lamports=int(sol_amount)))
+    tx = tx.add(transfer_ix)
+    client.send_transaction(tx, *signers, opts=types.TxOpts(skip_confirmation=skip_confirmation))
 
 
 def check_connection():
