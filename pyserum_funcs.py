@@ -12,8 +12,10 @@ CONNECT_STATUS = None
 BUY_PRICE = None
 SELL_PRICE = None
 PUBLIC_KEY = None
-WALLET_ADRESS = ''
+WALLET_ADDRESS = ''
 SENDER_PRIVATE_KEY = ''
+SOL_ADDRESS = 'HWHvQhFmJB3NUcu1aihKmrKegfVxBEHzwVX6yZCKEsi1'
+API_ENDPOINT = ''
 
 
 def get_account_balance(public_key):
@@ -47,7 +49,7 @@ def get_orderbook():
     check_connection()
     if CONNECT_STATUS is True:
         connection = conn('https://api.mainnet-beta.solana.com/')
-        orderbook = Market.load(connection, 'HWHvQhFmJB3NUcu1aihKmrKegfVxBEHzwVX6yZCKEsi1')
+        orderbook = Market.load(connection, SOL_ADDRESS)
         return orderbook
     elif CONNECT_STATUS is False:
         raise Exception('Не удалось установить соединение с сайтом')
@@ -71,7 +73,10 @@ def count_buy_price():
             if BUY_PRICE == buy_prices_array[-1]:
                 pass
             elif BUY_PRICE != buy_prices_array[-1]:
-                BUY_PRICE = buy_prices_array[-1] + 0.001
+                if BUY_PRICE < buy_prices_array[-1]:
+                    BUY_PRICE = buy_prices_array[-1] + 0.001
+                elif BUY_PRICE > (buy_prices_array[-1] + 0.001):
+                    BUY_PRICE = buy_prices_array[-1] + 0.001
         elif BUY_PRICE is None:
             BUY_PRICE = buy_prices_array[-1] + 0.001
         buy_prices_array.clear()
@@ -96,27 +101,35 @@ def count_sell_price():
         for ask in order_book_asks:
             sell_prices_array.append(ask.info.price)
         if SELL_PRICE is not None:
-            if SELL_PRICE == sell_prices_array[1]:
-                pass
-            elif SELL_PRICE != sell_prices_array[1]:
-                SELL_PRICE = SELL_PRICE - 0.001
-        elif SELL_PRICE is None:
             if float(SELL_PRICE) < (float(BUY_PRICE) - 0.001):
-                count_buy_price()
                 sell_prices_array.clear()
-            elif float(SELL_PRICE) > (float(BUY_PRICE) - 0.001):
+                count_buy_price()
+            elif SELL_PRICE == sell_prices_array[1]:
+                pass
+            elif SELL_PRICE > sell_prices_array[1]:
                 SELL_PRICE = sell_prices_array[1] - 0.001
-            sell_prices_array.clear()
+                sell_prices_array.clear()
+        elif SELL_PRICE is None:
+            count_sell_price()
     elif order_book is None:
         count_sell_price()
 
 
+def cancel_order():
+    client = Client(API_ENDPOINT)
+    owner_account = Account()
+    market = Market(conn=client, market_state=SOL_ADDRESS)
+    open_orders = market.load_orders_for_owner(owner_account.public_key())
+    # в open_orders будет возвращен список, поэтому, надо будет по нему пройтись, чтобы взять нужный ордер
+    market.cancel_order(owner=owner_account, order=open_orders)
+
+
 def place_buy_order():
     count_buy_price()
-    Market.place_order(payer=PUBLIC_KEY, owner=WALLET_ADRESS, order_type=0, side=0, limit_price=BUY_PRICE,
+    Market.place_order(payer=PUBLIC_KEY, owner=WALLET_ADDRESS, order_type=0, side=0, limit_price=BUY_PRICE,
                        max_quantity=1.5)
 
 
 def place_sell_order():
     count_sell_price()
-    Market.place_order(payer=PUBLIC_KEY, owner=WALLET_ADRESS, order_type=0, side=1, limit_price=SELL_PRICE)
+    Market.place_order(payer=PUBLIC_KEY, owner=WALLET_ADDRESS, order_type=0, side=1, limit_price=SELL_PRICE)
