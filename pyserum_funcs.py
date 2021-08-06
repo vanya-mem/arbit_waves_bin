@@ -16,6 +16,12 @@ WALLET_ADRESS = ''
 SENDER_PRIVATE_KEY = ''
 
 
+def get_account_balance(public_key):
+    client = Client()
+    balance_acc = client.get_balance(pubkey=public_key, commitment=None) #param commitment: (optional) Bank state to query.
+    return balance_acc
+
+
 def transfer_sol_to_wallet(send_to, api_endpoint, sol_amount, skip_confirmation=True):
     client = Client(api_endpoint)
     sender_account = Account(SENDER_PRIVATE_KEY)
