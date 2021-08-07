@@ -13,21 +13,22 @@ BUY_PRICE = None
 SELL_PRICE = None
 PUBLIC_KEY = None
 WALLET_ADDRESS = ''
-SENDER_PRIVATE_KEY = ''
+OWNER_ACC_PRVT_KEY = ''
 SOL_ADDRESS = 'HWHvQhFmJB3NUcu1aihKmrKegfVxBEHzwVX6yZCKEsi1'
 API_ENDPOINT = ''
 
 
-def get_account_balance(public_key):
+def get_account_balance():
     client = Client()
-    balance_acc = client.get_balance(pubkey=public_key, commitment=None) #param commitment: (optional) Bank state to query.
+    account = Account(OWNER_ACC_PRVT_KEY)
+    balance_acc = client.get_balance(pubkey=account.public_key(), commitment=None) #param commitment: (optional) Bank state to query.
     return balance_acc
 
 
-def transfer_sol_to_wallet(send_to, api_endpoint, sol_amount, skip_confirmation=True):
-    client = Client(api_endpoint)
-    sender_account = Account(SENDER_PRIVATE_KEY)
-    to_account = PublicKey(send_to)
+def transfer_sol_to_wallet(send_to, sol_amount, skip_confirmation=True):
+    client = Client(API_ENDPOINT)
+    sender_account = Account(OWNER_ACC_PRVT_KEY)
+    to_account = PublicKey(send_to)  # send_to - указывается кошелек
     tx = Transaction()
     signers = [sender_account]
     transfer_ix = transfer(TransferParams(from_pubkey=sender_account.public_key(), to_pubkey=to_account,
@@ -117,7 +118,7 @@ def count_sell_price():
 
 def cancel_order():
     client = Client(API_ENDPOINT)
-    owner_account = Account()
+    owner_account = Account(OWNER_ACC_PRVT_KEY)
     market = Market(conn=client, market_state=SOL_ADDRESS)
     open_orders = market.load_orders_for_owner(owner_account.public_key())
     # в open_orders будет возвращен список, поэтому, надо будет по нему пройтись, чтобы взять нужный ордер
