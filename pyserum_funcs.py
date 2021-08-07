@@ -127,10 +127,12 @@ def cancel_order():
 
 def place_buy_order():
     count_buy_price()
-    Market.place_order(payer=PUBLIC_KEY, owner=WALLET_ADDRESS, order_type=0, side=0, limit_price=BUY_PRICE,
+    owner_acc = Account(OWNER_ACC_PRVT_KEY)
+    Market.place_order(payer=owner_acc.public_key(), owner=WALLET_ADDRESS, order_type=0, side=0, limit_price=BUY_PRICE,
                        max_quantity=1.5)
 
 
 def place_sell_order():
     count_sell_price()
-    Market.place_order(payer=PUBLIC_KEY, owner=WALLET_ADDRESS, order_type=0, side=1, limit_price=SELL_PRICE)
+    owner_acc = Account(OWNER_ACC_PRVT_KEY)
+    Market.place_order(payer=owner_acc.public_key(), owner=WALLET_ADDRESS, order_type=0, side=1, limit_price=SELL_PRICE)
